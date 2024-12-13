@@ -41,54 +41,77 @@ int operation(int a, int b, char op)
     }
 }
 
-int evaluate(char *exp)
+int is_space(char ch)
 {
-    int numstack[MAX], topn = -1;
-    char opstack[MAX], topo = -1;
-    for (int i = 0; exp[i] != '\0'; i++)
+    if (ch == ' ' || ch == '\n')
     {
-        if (isspace(exp[i]))
+        return 1;
+    }
+    return 0;
+}
+int is_digit(char ch)
+{
+    if (ch >= '0' && ch <= '9')
+        return 1;
+    return 0;
+}
+
+int string_length(char *str)
+{
+    int size = 0;
+    while (str[size] != '\0')
+        size++;
+    return size;
+}
+
+int evaluate(char *expression)
+{
+    int number_stack[MAX], number_stack_top = -1;
+    char operator_stack[MAX], operator_stack_top = -1;
+    for (int i = 0; expression[i] != '\0'; i++)
+    {
+        if (is_space(expression[i]))
             continue;
-        if (isdigit(exp[i]))
+        if (is_digit(expression[i]))
         {
             int x = 0;
-            while (i < strlen(exp) && isdigit(exp[i]))
+            while (i < string_length(expression) && is_digit(expression[i]))
             {
-                x = x * 10 + (exp[i++] - '0');
+                x = x * 10 + (expression[i++] - '0');
             }
-            topn++;
-            numstack[topn] = x;
+            number_stack_top++;
+            number_stack[number_stack_top] = x;
             i--;
         }
-        else if (strchr("+-*/", exp[i]))
+        else if (strchr("+-*/", expression[i]))
         {
-            while (topo >= 0 && precedence(opstack[topo]) >= precedence(exp[i]))
+            while (operator_stack_top >= 0 && precedence(operator_stack[operator_stack_top]) >= precedence(expression[i]))
             {
-                int y = numstack[topn--];
-                int x = numstack[topn--];
-                char op = opstack[topo--];
-                topn++;
-                numstack[topn] = operation(x, y, op);
+                int y = number_stack[number_stack_top--];
+                int x = number_stack[number_stack_top--];
+                char op = operator_stack[operator_stack_top--];
+                number_stack_top++;
+                number_stack[number_stack_top] = operation(x, y, op);
             }
-            topo++;
-            opstack[topo] = exp[i];
+            operator_stack_top++;
+            operator_stack[operator_stack_top] = expression[i];
         }
         else
         {
             printf("Error: Invalid expression.\n");
-            return -1000000000;
+            exit(0);
         }
     }
 
-    while (topo >= 0)
+    while (operator_stack_top >= 0)
     {
-        int b = numstack[topn--];
-        int a = numstack[topn--];
-        char op = opstack[topo--];
-        numstack[++topn] = operation(a, b, op);
+        int b = number_stack[number_stack_top--];
+        int a = number_stack[number_stack_top--];
+        char op = operator_stack[operator_stack_top--];
+        number_stack[++number_stack_top] = operation(a, b, op);
     }
 
-    return numstack[topn];
+    return number_stack[number_stack_top];
 }
 
 int main()
@@ -97,9 +120,6 @@ int main()
     printf("Enter an expression: ");
     fgets(expression, MAX, stdin);
     int ans = evaluate(expression);
-    if (ans != -1000000000)
-    {
-        printf("Answer: %d\n", ans);
-    }
+    printf("Answer: %d\n", ans);
     return 0;
 }
