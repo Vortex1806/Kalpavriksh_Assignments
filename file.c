@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-typedef struct{
+#define FILENAME "users.txt"
+typedef struct
+{
     int id;
     char name[50];
     int age;
@@ -10,14 +11,23 @@ typedef struct{
 
 int userIdCheck(int userId)
 {
-    FILE *file = fopen("users.txt", "r");
-    if (!file){
-        printf("Error opening file.\n");
-        return -1;
+    FILE *file = fopen(FILENAME, "r");
+    if (!file)
+    {
+        file = fopen(FILENAME, "w");
+        if (!file)
+        {
+            printf("Error: Cannot create file\n");
+            return -1;
+        }
+        fclose(file);
+        return 0;
     }
     User user;
-    while (fscanf(file, "%d,%49[^,],%d", &user.id, user.name, &user.age) == 3){
-        if (user.id == userId){
+    while (fscanf(file, "%d,%49[^,],%d", &user.id, user.name, &user.age) == 3)
+    {
+        if (user.id == userId)
+        {
             fclose(file);
             return 1;
         }
@@ -26,20 +36,60 @@ int userIdCheck(int userId)
     return 0;
 }
 
-void createUser(){
-    User user;
-    printf("Enter UserID: ");
-    scanf("%d", &user.id);
-    if (userIdCheck(user.id) == 1){
-        printf("Error: UserID %d already exists\n", user.id);
-        return;
+int isValidNumber(char *str)
+{
+    for (int i = 0; str[i] != '\0'; i++)
+    {
+        if (str[i] < '0' || str[i] > '9')
+        {
+            return 0;
+        }
     }
+    return 1;
+}
+
+int getValidInteger(char *prompt)
+{
+    char input[20];
+    int value;
+
+    while (1)
+    {
+        printf("%s", prompt);
+        scanf("%10s", input);
+
+        if (isValidNumber(input))
+        {
+            value = atoi(input);
+            return value;
+        }
+        printf("Invalid input. Please enter a valid number.\n");
+    }
+}
+
+void createUser()
+{
+    User user;
+    do
+    {
+        user.id = getValidInteger("Enter UserID: ");
+        if (userIdCheck(user.id))
+        {
+            printf("Error: UserID %d already exists\n", user.id);
+        }
+        else
+        {
+            break;
+        }
+    } while (1);
     printf("Enter UserName: ");
     scanf(" %s", user.name);
-    printf("Enter User Age: ");
-    scanf("%d", &user.age);
-    FILE *file = fopen("users.txt", "a");
-    if (!file){
+
+    user.age = getValidInteger("Enter User Age: ");
+
+    FILE *file = fopen(FILENAME, "a");
+    if (!file)
+    {
         printf("Error opening file\n");
         return;
     }
@@ -47,108 +97,142 @@ void createUser(){
     fclose(file);
     printf("User added successfully\n");
 }
-void displayUsers(){
+void displayUsers()
+{
     User user;
-    FILE *f = fopen("users.txt", "r");
-    if (!f){
-        printf("Error opening file\n");
+    FILE *file = fopen(FILENAME, "r");
+    if (!file)
+    {
+        printf("Error: No users found. File does not exist\n");
         return;
     }
     printf("UserId  UserName  Age\n\n");
-    while (fscanf(f, "%d,%49[^,],%d", &user.id, user.name, &user.age) == 3){
+    if (fscanf(file, "%d,%49[^,],%d", &user.id, user.name, &user.age) != 3)
+    {
+        fclose(file);
+        printf("No users found.\n");
+    }
+    rewind(file);
+
+    while (fscanf(file, "%d,%49[^,],%d", &user.id, user.name, &user.age) == 3)
+    {
         printf("   %d    %s    %d\n", user.id, user.name, user.age);
     }
-    fclose(f);
+    fclose(file);
 }
-void updateUser() {
+void updateUser()
+{
     int userId, flag = 0;
     User user;
-    FILE *file = fopen("users.txt", "r");
-    if (!file) {
-        printf("Error opening file\n");
+    FILE *file = fopen(FILENAME, "r");
+    if (!file)
+    {
+        printf("Error: No users found. File does not exist\n");
         return;
     }
 
     User users[100];
     int n = 0;
 
-    while (fscanf(file, "%d,%49[^,],%d", &user.id, user.name, &user.age) == 3) {
+    while (fscanf(file, "%d,%49[^,],%d", &user.id, user.name, &user.age) == 3)
+    {
         users[n] = user;
         n++;
     }
     fclose(file);
-
-    printf("Enter UserID to be updated: ");
-    scanf("%d", &userId);
-    for (int i = 0; i < n; i++) {
-        if (users[i].id == userId) {
+    if (n == 0)
+    {
+        printf("No users in the system.\n");
+        return;
+    }
+    userId = getValidInteger("Enter UserID to update: ");
+    for (int i = 0; i < n; i++)
+    {
+        if (users[i].id == userId)
+        {
             flag = 1;
             printf("Enter new UserName: ");
             scanf(" %49s", users[i].name);
-            printf("Enter new User Age: ");
-            scanf("%d", &users[i].age);
+            users[i].age = getValidInteger("Enter new User Age: ");
             printf("\nSuccessfully modified to:\n");
             printf("UserID: %d, UserName: %s, Age: %d\n", users[i].id, users[i].name, users[i].age);
             break;
         }
     }
-    if (!flag) {
+    if (!flag)
+    {
         printf("Error: UserID %d not found\nn", userId);
         return;
     }
-    file = fopen("users.txt", "w");
-    if (!file) {
+    file = fopen(FILENAME, "w");
+    if (!file)
+    {
         printf("Error opening file\n");
         return;
     }
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
+    {
         fprintf(file, "%d,%s,%d\n", users[i].id, users[i].name, users[i].age);
     }
     fclose(file);
 }
-void deleteUser() {
+void deleteUser()
+{
     int userId, flag = 0;
     User user;
-    FILE *file = fopen("users.txt", "r");
-    if (!file) {
-        printf("Error opening file\n");
+    FILE *file = fopen(FILENAME, "r");
+    if (!file)
+    {
+        printf("Error: No users found. File does not exist\n");
         return;
     }
     User users[100];
     int n = 0;
 
-    while (fscanf(file, "%d,%49[^,],%d", &user.id, user.name, &user.age) == 3) {
+    while (fscanf(file, "%d,%49[^,],%d", &user.id, user.name, &user.age) == 3)
+    {
         users[n] = user;
         n++;
     }
     fclose(file);
 
-    printf("Enter UserID to delete: ");
-    scanf("%d", &userId);
+    if (n == 0)
+    {
+        printf("No users in the system.\n");
+        return;
+    }
 
-    for (int i = 0; i < n; i++) {
-        if (users[i].id == userId) {
+    userId = getValidInteger("Enter UserID to delete: ");
+
+    for (int i = 0; i < n; i++)
+    {
+        if (users[i].id == userId)
+        {
             flag = 1;
-            for (int j = i; j < n - 1; j++) {
+            for (int j = i; j < n - 1; j++)
+            {
                 users[j] = users[j + 1];
             }
-            n--; 
+            n--;
             break;
         }
     }
 
-    if (!flag) {
+    if (!flag)
+    {
         printf("Error: UserID %d not found\n", userId);
         return;
     }
 
-    file = fopen("users.txt", "w");
-    if (!file) {
+    file = fopen(FILENAME, "w");
+    if (!file)
+    {
         printf("Error opening file\n");
         return;
     }
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
+    {
         fprintf(file, "%d,%s,%d\n", users[i].id, users[i].name, users[i].age);
     }
     fclose(file);
