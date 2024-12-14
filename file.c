@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #define FILENAME "users.txt"
 typedef struct
 {
@@ -47,6 +46,38 @@ int isValidNumber(char *str)
     }
     return 1;
 }
+int isValidName(char *name)
+{
+    for (int i = 0; name[i] != '\0'; i++)
+    {
+        if (name[i] == ',' || name[i] == '\n')
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void string_copy(char dest[], const char src[])
+{
+    int i = 0;
+    while (src[i] != '\0')
+    {
+        dest[i] = src[i];
+        i++;
+    }
+    dest[i] = '\0';
+}
+
+int custom_atoi(char *str)
+{
+    int result = 0;
+    for (int i = 0; str[i] != '\0'; i++)
+    {
+        result = (result * 10) + (str[i] - '0');
+    }
+    return result;
+}
 
 int getValidInteger(char *prompt)
 {
@@ -60,7 +91,7 @@ int getValidInteger(char *prompt)
 
         if (isValidNumber(input))
         {
-            value = atoi(input);
+            value = custom_atoi(input);
             return value;
         }
         printf("Invalid input. Please enter a valid number.\n");
@@ -70,6 +101,7 @@ int getValidInteger(char *prompt)
 void createUser()
 {
     User user;
+    char tempName[50];
     do
     {
         user.id = getValidInteger("Enter UserID: ");
@@ -82,8 +114,20 @@ void createUser()
             break;
         }
     } while (1);
-    printf("Enter UserName: ");
-    scanf(" %s", user.name);
+    do
+    {
+        printf("Enter UserName (no commas allowed): ");
+        scanf(" %49[^\n]", tempName);
+        if (isValidName(tempName))
+        {
+            string_copy(user.name, tempName);
+            break;
+        }
+        else
+        {
+            printf("Invalid username. Commas are not allowed. Please try again.\n");
+        }
+    } while (1);
 
     user.age = getValidInteger("Enter User Age: ");
 
@@ -120,6 +164,7 @@ void displayUsers()
     }
     fclose(file);
 }
+
 void updateUser()
 {
     int userId, flag = 0;
@@ -151,8 +196,21 @@ void updateUser()
         if (users[i].id == userId)
         {
             flag = 1;
-            printf("Enter new UserName: ");
-            scanf(" %49s", users[i].name);
+            char tempName[50];
+            do
+            {
+                printf("Enter new UserName (no commas allowed): ");
+                scanf(" %49[^\n]", tempName);
+                if (isValidName(tempName))
+                {
+                    string_copy(users[i].name, tempName);
+                    break;
+                }
+                else
+                {
+                    printf("Invalid username. Commas are not allowed. Please try again.\n");
+                }
+            } while (1);
             users[i].age = getValidInteger("Enter new User Age: ");
             printf("\nSuccessfully modified to:\n");
             printf("UserID: %d, UserName: %s, Age: %d\n", users[i].id, users[i].name, users[i].age);
