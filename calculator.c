@@ -1,8 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-
 #define MAX 100
 
 int precedence(char op)
@@ -10,32 +7,34 @@ int precedence(char op)
     switch (op)
     {
     case '+':
-    case '-':
         return 1;
+    case '-':
+        return 0;
     case '*':
-    case '/':
         return 2;
+    case '/':
+        return 3;
     }
     return -1;
 }
 
-int operation(int a, int b, char op)
+int operation(int first_digit, int second_digit, char operator)
 {
-    switch (op)
+    switch (operator)
     {
     case '*':
-        return a * b;
+        return first_digit * second_digit;
     case '+':
-        return a + b;
+        return first_digit + second_digit;
     case '-':
-        return a - b;
+        return first_digit - second_digit;
     case '/':
-        if (b == 0)
+        if (second_digit == 0)
         {
             printf("Error dividing by zero\n");
             exit(0);
         }
-        return a / b;
+        return first_digit / second_digit;
     default:
         return 0;
     }
@@ -83,7 +82,7 @@ int evaluate(char *expression)
             number_stack[number_stack_top] = x;
             i--;
         }
-        else if (strchr("+-*/", expression[i]))
+        else if (expression[i] == '+' || expression[i] == '-' || expression[i] == '*' || expression[i] == '/')
         {
             while (operator_stack_top >= 0 && precedence(operator_stack[operator_stack_top]) >= precedence(expression[i]))
             {
